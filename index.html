@@ -22,6 +22,31 @@
     --err: #c62b2b;
     --h: 52px; /* 時間軸每一小時的高度 */
     --font: "Bahnschrift", "DIN Alternate", "Segoe UI", "Microsoft JhengHei", "PingFang TC", "Noto Sans TC", sans-serif;
+    --on-ink: #fff;                       /* 墨色底上的文字 */
+    --input-bg: #fff;
+    --hatch: rgba(22, 33, 44, 0.05);      /* 空檔斜線 */
+    --ok-bg: #e7f4ef;
+    --err-bg: #fbeaea;
+    --focus: #2547e8;
+    color-scheme: light;
+  }
+  /* 深色模式：只覆寫色彩變數 */
+  :root[data-theme="dark"] {
+    --paper: #0f161d;
+    --panel: #1a232d;
+    --ink: #e8edf2;
+    --muted: #a3afbb;
+    --line: #38444f;
+    --field: #5d6b78;
+    --ok: #4fd1a5;
+    --err: #ff8a8a;
+    --on-ink: #0f161d;
+    --input-bg: #111a22;
+    --hatch: rgba(232, 237, 242, 0.06);
+    --ok-bg: #12352b;
+    --err-bg: #3d1c1c;
+    --focus: #8da2ff;
+    color-scheme: dark;
   }
   * { box-sizing: border-box; }
   body {
@@ -33,6 +58,19 @@
     line-height: 1.5;
   }
   .app { max-width: 1040px; margin: 0 auto; padding: 24px 16px 48px; }
+  .title-bar { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 20px; }
+  .title-bar h1 { margin: 0; }
+  button.theme-toggle {
+    flex: none;
+    height: 36px;
+    padding: 0 14px;
+    border: 1px solid var(--field);
+    background: var(--panel);
+    color: var(--ink);
+    font-size: 0.875rem;
+    letter-spacing: 0.04em;
+  }
+  button.theme-toggle:hover { background: var(--line); }
   h1 {
     margin: 0 0 20px;
     font-size: clamp(1.6rem, 4vw, 2.25rem);
@@ -57,7 +95,7 @@
     padding: 0 10px;
     border: 1px solid var(--field);
     border-radius: 2px;
-    background: #fff;
+    background: var(--input-bg);
     color: var(--ink);
     font: inherit;
     font-size: 1rem;
@@ -77,12 +115,12 @@
   button.export { height: 34px; padding: 0 14px; font-size: 0.875rem; }
   button:hover { background: var(--cobalt-dark); }
   button:active { transform: translateY(1px); }
-  :focus-visible { outline: 3px solid var(--cobalt); outline-offset: 2px; }
+  :focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
 
   .msg { margin-top: 14px; padding: 8px 12px; border-left: 4px solid; font-size: 0.9375rem; font-weight: 600; }
   .msg[hidden] { display: none; }
-  .msg.ok { color: var(--ok); border-color: var(--ok); background: #e7f4ef; }
-  .msg.error { color: var(--err); border-color: var(--err); background: #fbeaea; }
+  .msg.ok { color: var(--ok); border-color: var(--ok); background: var(--ok-bg); }
+  .msg.error { color: var(--err); border-color: var(--err); background: var(--err-bg); }
 
   /* ----- 看板標頭 ----- */
   .board-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 4px 16px; }
@@ -92,7 +130,7 @@
     padding: 2px 8px;
     border-radius: 2px;
     background: var(--ink);
-    color: #fff;
+    color: var(--on-ink);
     font-size: 0.75rem;
     font-weight: 600;
     vertical-align: middle;
@@ -134,7 +172,7 @@
     /* 上層：每小時一條刻度線；下層：空檔的細斜線 */
     background:
       repeating-linear-gradient(to bottom, var(--line) 0, var(--line) 1px, transparent 1px, transparent var(--h)),
-      repeating-linear-gradient(135deg, transparent 0, transparent 7px, rgba(22, 33, 44, 0.05) 7px, rgba(22, 33, 44, 0.05) 8px);
+      repeating-linear-gradient(135deg, transparent 0, transparent 7px, var(--hatch) 7px, var(--hatch) 8px);
   }
   .slot {
     position: absolute;
@@ -181,7 +219,10 @@
 </head>
 <body>
 <main class="app">
-  <h1>會議室預約看板</h1>
+  <div class="title-bar">
+    <h1>會議室預約看板</h1>
+    <button type="button" id="themeToggle" class="theme-toggle" aria-pressed="false">🌙 深色模式</button>
+  </div>
 
   <div class="layout">
     <section class="panel" aria-labelledby="formTitle">
@@ -221,6 +262,26 @@
   </div>
 </main>
 
+<script>
+  // 深色模式切換（僅外觀；偏好存 localStorage，讀寫失敗時忽略）
+  (function () {
+    const root = document.documentElement;
+    const btn = document.getElementById('themeToggle');
+    function apply(dark) {
+      if (dark) root.setAttribute('data-theme', 'dark'); else root.removeAttribute('data-theme');
+      btn.textContent = dark ? '☀️ 淺色模式' : '🌙 深色模式';
+      btn.setAttribute('aria-pressed', String(dark));
+    }
+    let saved = null;
+    try { saved = localStorage.getItem('meetingRoomTheme'); } catch (e) {}
+    apply(saved === 'dark');
+    btn.addEventListener('click', function () {
+      const dark = root.getAttribute('data-theme') !== 'dark';
+      apply(dark);
+      try { localStorage.setItem('meetingRoomTheme', dark ? 'dark' : 'light'); } catch (e) {}
+    });
+  })();
+</script>
 <script src="app.js"></script>
 <script>
   // ===== 常數 =====
