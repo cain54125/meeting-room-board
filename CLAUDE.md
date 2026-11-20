@@ -12,7 +12,7 @@ MVP 已完成（`index.html`），並已加入「取消預約」與「匯出 CSV
 
 ## 開發規範
 
-- **單一 HTML 檔案，檔名固定為 `index.html`**：HTML、CSS、JS 全部寫在 `index.html` 內，禁止拆分成多個檔案。
+- **三檔結構：`index.html` + `app.js` + `test.html`**：衝突判定邏輯（`isOverlap`、`findConflict`）放在 `app.js`，以一般 `<script src="app.js">` 載入（不用 ES module，頁面直接雙擊開啟）；禁止再拆分其他檔案。
 - **禁止引入外部框架或函式庫**（不用 CDN、不用 npm 套件），只用原生 Web API。
 - **所有介面文字與程式註解使用繁體中文**。
 - **資料只存 localStorage**：沒有後端、資料庫、多人即時同步、Email/通知、登入權限——這些都是明確的非目標。

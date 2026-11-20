@@ -221,6 +221,7 @@
   </div>
 </main>
 
+<script src="app.js"></script>
 <script>
   // ===== 常數 =====
   const STORAGE_KEY = 'meetingRoomBookings';
@@ -249,19 +250,7 @@
   }
 
   // ===== 邏輯層 =====
-  // 半開區間 [start, end) 重疊才算衝突（10–11 與 11–12 不衝突）
-  function isOverlap(a, b) {
-    return a.start < b.end && b.start < a.end;
-  }
-
-  // 找出同會議室、同日期且時段重疊的第一筆預約，沒有則回傳 null
-  function findConflict(newBooking, list) {
-    return list.find(function (b) {
-      return b.room === newBooking.room &&
-             b.date === newBooking.date &&
-             isOverlap(b, newBooking);
-    }) || null;
-  }
+  // 衝突判定（isOverlap、findConflict）已移至 app.js
 
   // 驗證輸入；通過回傳 null，否則回傳錯誤訊息
   function validate(input) {
