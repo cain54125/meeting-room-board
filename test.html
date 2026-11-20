@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<title>衝突檢查測試</title>
+<style>
+  body { font-family: sans-serif; max-width: 800px; margin: 20px auto; padding: 0 12px; }
+  #summary { font-size: 1.3em; font-weight: bold; padding: 10px; border-radius: 6px; margin-bottom: 16px; }
+  #summary.ok { background: #d4edda; color: #155724; }
+  #summary.fail { background: #f8d7da; color: #721c24; }
+  table { border-collapse: collapse; width: 100%; }
+  th, td { border: 1px solid #ccc; padding: 6px 10px; text-align: left; }
+  th { background: #f0f0f0; }
+  tr.fail { background: #fdecea; }
+</style>
+</head>
+<body>
+<h1>衝突檢查函式測試</h1>
+<div id="summary"></div>
+<table>
+  <thead><tr><th>測試名稱</th><th>預期值</th><th>實際值</th><th>結果</th></tr></thead>
+  <tbody id="results"></tbody>
+</table>
+
+<script src="app.js"></script>
+<script>
+  // 建立預約資料的小工具
+  function mk(room, date, start, end) {
+    return { room: room, date: date, start: start, end: end };
+  }
+
+  var D = '2025-01-01';
+  var existing = mk('A', D, 10, 12);
+
+  // 每個測試：名稱、預期是否衝突、實際執行結果（true=有衝突）
+  var tests = [
+    // 一般情況
+    { name: '完全相同時段 10–12 vs 10–12', expected: true,
+      run: function () { return findConflict(mk('A', D, 10, 12), [existing]) !== null; } },
+    { name: '完全錯開 13–15 vs 10–12', expected: false,
+      run: function () { return findConflict(mk('A', D, 13, 15), [existing]) !== null; } },
+    { name: '空列表無衝突', expected: false,
+      run: function () { return findConflict(mk('A', D, 10, 12), []) !== null; } },
+
+    // 邊界情況
+    { name: '部分重疊（前段）9–11 vs 10–12', expected: true,
+      run: function () { return findConflict(mk('A', D, 9, 11), [existing]) !== null; } },
+    { name: '部分重疊（後段）11–13 vs 10–12', expected: true,
+      run: function () { return findConflict(mk('A', D, 11, 13), [existing]) !== null; } },
+    { name: '新預約完全包含舊預約 9–13 vs 10–12', expected: true,
+      run: function () { return findConflict(mk('A', D, 9, 13), [existing]) !== null; } },
+    { name: '新預約被舊預約完全包含 10–11 vs 10–12', expected: true,
+      run: function () { return findConflict(mk('A', D, 10, 11), [existing]) !== null; } },
+    { name: '緊鄰（後）12–14 與 10–12 應允許', expected: false,
+      run: function () { return findConflict(mk('A', D, 12, 14), [existing]) !== null; } },
+    { name: '緊鄰（前）8–10 與 10–12 應允許', expected: false,
+      run: function () { return findConflict(mk('A', D, 8, 10), [existing]) !== null; } },
+    { name: '不同會議室同時段應允許', expected: false,
+      run: function () { return findConflict(mk('B', D, 10, 12), [existing]) !== null; } },
+    { name: '不同日期同時段應允許', expected: false,
+      run: function () { return findConflict(mk('A', '2025-01-02', 10, 12), [existing]) !== null; } },
+    { name: 'findConflict 回傳衝突的那筆預約', expected: true,
+      run: function () { return findConflict(mk('A', D, 11, 13), [existing]) === existing; } },
+
+    // isOverlap 直接測試
+    { name: 'isOverlap 10–12 與 12–14', expected: false,
+      run: function () { return isOverlap(mk('A', D, 10, 12), mk('A', D, 12, 14)); } },
+    { name: 'isOverlap 10–12 與 11–13', expected: true,
+      run: function () { return isOverlap(mk('A', D, 10, 12), mk('A', D, 11, 13)); } }
+  ];
+
+  var tbody = document.getElementById('results');
+  var passed = 0;
+
+  tests.forEach(function (t) {
+    var actual;
+    try { actual = t.run(); } catch (e) { actual = '例外：' + e.message; }
+    var ok = actual === t.expected;
+    if (ok) passed++;
+
+    var tr = document.createElement('tr');
+    if (!ok) tr.className = 'fail';
+    [t.name, String(t.expected), String(actual), ok ? '✅' : '❌'].forEach(function (text) {
+      var td = document.createElement('td');
+      td.textContent = text;
+      tr.appendChild(td);
+    });
+    tbody.appendChild(tr);
+  });
+
+  var summary = document.getElementById('summary');
+  summary.textContent = '通過 ' + passed + ' 項／共 ' + tests.length + ' 項';
+  summary.className = passed === tests.length ? 'ok' : 'fail';
+</script>
+</body>
+</html>
