@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## 專案現況
 
-目前 repo 只有需求規格 `spec.md`，尚未有任何程式碼。`spec.md` 是唯一的需求來源，實作前先讀它；範圍有疑問時以其「非目標」與「驗收標準」為準，不要自行擴充功能。
+MVP 已完成（`index.html`），並已加入「取消預約」功能。`spec.md` 是唯一的需求來源，修改前先讀它；範圍有疑問時以其「非目標」與「驗收標準」為準，不要自行擴充功能。
 
 ## 專案概要
 
@@ -23,6 +23,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - 時段為**整點制**：起始與結束都是整點，結束必須晚於起始。
 - 衝突判定：同一會議室、同一日期，時段區間重疊即拒絕並提示。區間視為半開區間 `[start, end)`，因此 10–11 與 11–12 不衝突。
 - 列表顯示「所選日期」的所有預約。
+- 取消預約：每筆預約附「取消」按鈕，先 `confirm()` 確認，確認後依 `id` 刪除（`removeBooking`）並重繪；不得更動新增流程與衝突檢查。
 - 讀取 localStorage 時要能容忍資料不存在或格式損壞（`JSON.parse` 失敗時回退為空陣列）。
 
 ## 開發與驗證
@@ -32,3 +33,4 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 1. 能建立一筆預約並顯示在列表。
 2. 相同會議室、重疊時段的預約會被擋下並提示。
 3. 重新整理頁面後，預約資料仍在。
+4. 按「取消」先出現確認；確認後預約消失且重新整理不復活，選否則不變。
