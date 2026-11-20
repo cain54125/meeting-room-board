@@ -74,6 +74,7 @@
     letter-spacing: 0.08em;
     cursor: pointer;
   }
+  button.export { height: 34px; padding: 0 14px; font-size: 0.875rem; }
   button:hover { background: var(--cobalt-dark); }
   button:active { transform: translateY(1px); }
   :focus-visible { outline: 3px solid var(--cobalt); outline-offset: 2px; }
@@ -212,6 +213,7 @@
       <div class="board-head">
         <h2 id="boardDate">當日預約</h2>
         <span class="count" id="boardCount"></span>
+        <button type="button" id="exportBtn" class="export">匯出 CSV</button>
       </div>
       <p class="hint" id="boardHint" hidden>這天還沒有預約，所有時段都能預約。</p>
       <div class="board" id="board"></div>
@@ -427,6 +429,39 @@
     $('name').value = '';
   }
 
+  // CSV 欄位跳脫：含逗號、引號、換行時加雙引號；開頭為 = + - @ 時加單引號避免被試算表當成公式
+  function csvCell(value) {
+    let s = String(value);
+    if (/^[=+\-@]/.test(s)) s = "'" + s;
+    return /[",\r\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
+  }
+
+  // 匯出目前選定日期的預約清單為 CSV
+  function exportCsv() {
+    const date = $('date').value;
+    const rows = loadBookings()
+      .filter(function (b) { return b.date === date; })
+      .sort(function (a, b) { return a.room.localeCompare(b.room) || a.start - b.start; });
+    if (rows.length === 0) {
+      showMessage('這天沒有預約可匯出', 'error');
+      return;
+    }
+    const lines = [['會議室', '時段', '預約人'].join(',')];
+    rows.forEach(function (b) {
+      lines.push([csvCell('會議室 ' + b.room), csvCell(pad(b.start) + '–' + pad(b.end)), csvCell(b.name)].join(','));
+    });
+    // 加 BOM 讓 Excel 正確辨識 UTF-8 中文
+    const blob = new Blob(['﻿' + lines.join('\r\n')], { type: 'text/csv;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = '預約清單_' + date + '.csv';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  }
+
   // ===== 初始化 =====
   function init() {
     ROOMS.forEach(function (r) {
@@ -441,6 +476,7 @@
 
     $('date').addEventListener('change', renderBoard);
     $('bookingForm').addEventListener('submit', onSubmit);
+    $('exportBtn').addEventListener('click', exportCsv);
     renderBoard();
   }
 
