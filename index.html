@@ -249,7 +249,7 @@
   }
 
   // ===== 邏輯層 =====
-  // 半開區間 [start, end)：10–11 與 11–12 不算重疊
+  // 半開區間 [start, end) 重疊才算衝突（10–11 與 11–12 不衝突）
   function isOverlap(a, b) {
     return a.start < b.end && b.start < a.end;
   }
